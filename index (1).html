@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>Registro de Asistencia</title>
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Estilos personalizados si es necesario, aunque Tailwind hace la mayor parte del trabajo */
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Registro de Conferencia</h1>
+        <div id="message" class="mb-4 p-3 text-center text-sm font-medium rounded-md" style="display: none;"></div>
+
+        <form id="recordForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <input type="hidden" id="rowIndex" name="rowIndex">
+            
+            <div class="col-span-1">
+                <label for="fullName" class="block text-sm font-medium text-gray-700">Nombre Completo:</label>
+                <input type="text" id="fullName" name="fullName" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            
+            <div class="col-span-1">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+                <input type="email" id="email" name="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            
+            <div class="col-span-full">
+                <label for="conference" class="block text-sm font-medium text-gray-700">Conferencia:</label>
+                <input type="text" id="conference" name="conference" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            
+            <div class="col-span-full flex justify-end space-x-4">
+                <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-500 text-white font-medium rounded-md shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" style="display: none;">Cancelar</button>
+                <button type="submit" id="submitBtn" class="px-4 py-2 bg-indigo-600 text-white font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Crear Registro</button>
+            </div>
+        </form>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Registros Existentes</h2>
+        <div class="overflow-x-auto">
+            <table id="recordsTable" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conferencia</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Tu código JavaScript debe permanecer sin cambios.
+        // Solo asegúrate de que 'webAppUrl' esté correctamente definido.
+        // Si tu HTML está en Vercel, debes definir la URL de tu API aquí: 
+      // ¡IMPORTANTE! Reemplaza 'TU_URL_DE_APPS_SCRIPT_API' con la URL real de tu despliegue.
+      //const webAppUrl = 'TU_URL_DE_APPS_SCRIPT_API';
+      const webAppUrl = 'https://script.google.com/macros/s/AKfycbwHUfo62xqWzmS-WYoLdqZ4jArCMsHTrMJpfvnxQkkp-H71mMCIj7do3QWE0QqodEA4/exec';
+       
+
+        // ... resto de tu código JavaScript ...
+        var form = document.getElementById('recordForm');
+        var tableBody = document.getElementById('recordsTable').getElementsByTagName('tbody')[0];
+        var messageDiv = document.getElementById('message');
+        var submitBtn = document.getElementById('submitBtn');
+        var cancelBtn = document.getElementById('cancelBtn');
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = type + ' block';
+            if (type === 'success') {
+                messageDiv.classList.add('bg-green-100', 'text-green-800');
+                messageDiv.classList.remove('bg-red-100', 'text-red-800');
+            } else {
+                messageDiv.classList.add('bg-red-100', 'text-red-800');
+                messageDiv.classList.remove('bg-green-100', 'text-green-800');
+            }
+            messageDiv.style.display = 'block';
+        }
+
+        async function fetchRecords() {
+            try {
+                const response = await fetch(webAppUrl + '?action=read');
+                const records = await response.json();
+                
+                tableBody.innerHTML = '';
+                records.forEach((record, index) => {
+                    const row = tableBody.insertRow();
+                    row.dataset.index = index;
+                    row.insertCell(0).textContent = new Date(record.Timestamp).toLocaleString();
+                    row.insertCell(1).textContent = record['Nombre Completo'];
+                    row.insertCell(2).textContent = record.Email;
+                    row.insertCell(3).textContent = record.Conferencia;
+                    
+                    const actionsCell = row.insertCell(4);
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'Editar';
+                    editBtn.className = 'btn-edit px-3 py-1 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
+                    editBtn.onclick = () => editRecord(index, record);
+                    actionsCell.appendChild(editBtn);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Eliminar';
+                    deleteBtn.className = 'btn-delete px-3 py-1 text-sm text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ml-2';
+                    deleteBtn.onclick = () => deleteRecord(index);
+                    actionsCell.appendChild(deleteBtn);
+                });
+            } catch (error) {
+                console.error('Error al obtener los datos:', error);
+                showMessage('Error al cargar los datos.', 'error');
+            }
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const rowIndex = document.getElementById('rowIndex').value;
+            const action = rowIndex === '' ? 'create' : 'update';
+
+            const data = {
+                action: action,
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                conference: document.getElementById('conference').value,
+                row: rowIndex
+            };
+
+            try {
+                const response = await fetch(webAppUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    form.reset();
+                    document.getElementById('rowIndex').value = '';
+                    submitBtn.textContent = 'Crear Registro';
+                    cancelBtn.style.display = 'none';
+                    fetchRecords();
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error en la solicitud:', error);
+                showMessage('Hubo un error en la comunicación.', 'error');
+            }
+        });
+
+        function editRecord(index, record) {
+            document.getElementById('rowIndex').value = index;
+            document.getElementById('fullName').value = record['Nombre Completo'];
+            document.getElementById('email').value = record.Email;
+            document.getElementById('conference').value = record.Conferencia;
+            submitBtn.textContent = 'Actualizar Registro';
+            cancelBtn.style.display = 'inline-block';
+        }
+
+        cancelBtn.addEventListener('click', () => {
+            form.reset();
+            document.getElementById('rowIndex').value = '';
+            submitBtn.textContent = 'Crear Registro';
+            cancelBtn.style.display = 'none';
+        });
+
+        async function deleteRecord(index) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+                return;
+            }
+
+            const data = { action: 'delete', row: index };
+            try {
+                const response = await fetch(webAppUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    fetchRecords();
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Error al eliminar el registro.', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchRecords);
+    </script>
+</body>
+</html>
